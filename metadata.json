@@ -1,0 +1,6 @@
+{
+  "name": "The Learning Collective",
+  "description": "A scheduling and session management application for The Learning Collective tutoring consultancy, enabling students to book sessions, manage payments, find tutors, and post questions.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
