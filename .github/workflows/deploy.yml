@@ -51,6 +51,4 @@ jobs:
           ingress: external
           containerAppEnvironment: learning-collective-env
           # Environment variables mapped securely at runtime
-          environmentVariables: |
-            DATABASE_URL=postgresql://cloudadmin:YourSecurePassword123!@learning-collective-db.postgres.database.azure.com:5432/postgres?sslmode=require
-            NODE_ENV=production
+        environmentVariables: "DATABASE_URL=${{ secrets.DATABASE_URL }} NODE_ENV=production"
