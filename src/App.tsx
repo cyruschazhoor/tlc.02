@@ -22,7 +22,11 @@ import {
   Send,
   Heart,
   ExternalLink,
-  Code
+  Code,
+  Sun,
+  Moon,
+  ChevronDown,
+  Grid
 } from 'lucide-react';
 import TutorCard from './components/TutorCard';
 import SessionCalendar from './components/SessionCalendar';
@@ -30,9 +34,10 @@ import QuestionsBoard from './components/QuestionsBoard';
 import AuthModal from './components/AuthModal';
 import PaymentModal from './components/PaymentModal';
 import NotificationToast from './components/NotificationToast';
-import PythonApiAssistant from './components/PythonApiAssistant';
+import MicroservicesHub from './components/MicroservicesHub';
+import EditProfile from './components/EditProfile';
 
-type Tab = 'dashboard' | 'tutors' | 'calendar' | 'questions' | 'about' | 'contact' | 'python-api';
+type Tab = 'dashboard' | 'tutors' | 'calendar' | 'questions' | 'about' | 'contact' | 'microservices';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -51,6 +56,23 @@ export default function App() {
   const [activePaymentSession, setActivePaymentSession] = useState<Session | null>(null);
   const [selectedTutorForBooking, setSelectedTutorForBooking] = useState<Tutor | null>(null);
   const [bellMenuOpen, setBellMenuOpen] = useState(false);
+  const [servicesMenuOpen, setServicesMenuOpen] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('theme');
+    return (saved === 'dark' || saved === 'light') ? saved : 'light';
+  });
+
+  // Sync theme with HTML document class
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [theme]);
 
   // Contact Form State
   const [contactName, setContactName] = useState('');
@@ -103,6 +125,11 @@ export default function App() {
     return () => window.removeEventListener('new_notification', handleNewNotif);
   }, [currentUser?.id]);
 
+  // Close notifications dropdown when switching tabs
+  useEffect(() => {
+    setBellMenuOpen(false);
+  }, [activeTab]);
+
   // Handle Authentication Success
   const handleAuthSuccess = (user: User) => {
     setCurrentUser(user);
@@ -122,7 +149,7 @@ export default function App() {
   // Handle Session Booking Complete
   const handleBookSession = async (sessionData: Session) => {
     try {
-      const newSession = await db.bookSession(sessionData);
+      await db.bookSession(sessionData);
       
       // Refresh database sessions
       if (currentUser) {
@@ -130,9 +157,7 @@ export default function App() {
         setSessions(updated);
       }
 
-      // Prompt to pay immediately
-      setActivePaymentSession(newSession);
-      setPaymentModalOpen(true);
+      // Session is automatically booked and confirmed directly
       setActiveTab('dashboard');
     } catch (err) {
       console.error(err);
@@ -201,12 +226,12 @@ export default function App() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <div className="min-h-screen bg-[#faf9f6] text-neutral-900 font-sans flex flex-col relative selection:bg-yellow-200">
+    <div className="min-h-screen bg-[#faf9f6] text-neutral-900 dark:bg-[#121513] dark:text-stone-100 font-sans flex flex-col relative selection:bg-yellow-200 dark:selection:bg-emerald-900">
       
       {/* Top Banner: Azure status & guides */}
-      <div className="bg-[#1e293b] text-[#E6E2D3] py-2.5 px-4 text-xs font-semibold flex flex-wrap items-center justify-between gap-2 border-b border-[#E6E2D3]/10">
+      <div className="hidden bg-[#1e293b] text-[#E6E2D3] py-2.5 px-4 text-xs font-semibold flex flex-wrap items-center justify-between gap-2 border-b border-[#E6E2D3]/10">
         <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1.5 text-sky-400">
+          <span className="hidden items-center gap-1.5 text-sky-400">
             <span className="w-2.5 h-2.5 rounded-full bg-sky-400 animate-pulse" />
             ☁️ Azure Cloud Deployment Ready
           </span>
@@ -217,7 +242,7 @@ export default function App() {
             href="https://portal.azure.com" 
             target="_blank" 
             rel="noreferrer" 
-            className="text-white font-bold hover:underline inline-flex items-center gap-1"
+            className="hidden text-white font-bold hover:underline inline-flex items-center gap-1"
           >
             Azure Portal <ExternalLink className="w-3.5 h-3.5" />
           </a>
@@ -225,7 +250,7 @@ export default function App() {
       </div>
 
       {/* Visual Header Panel mimicking the playful multi-colored logo */}
-      <header className="bg-white border-b border-[#E6E2D3] py-8 px-4 md:px-8 text-center relative overflow-hidden">
+      <header className="bg-white dark:bg-[#1a1e1b] border-b border-[#E6E2D3] dark:border-stone-800 py-8 px-4 md:px-8 text-center relative overflow-hidden">
         {/* Doodle Ornaments background decoration */}
         <div className="absolute top-4 left-6 hidden lg:block opacity-15 -rotate-12 pointer-events-none">
           <svg className="w-16 h-16 text-[#5F7161]" fill="currentColor" viewBox="0 0 24 24">
@@ -242,7 +267,7 @@ export default function App() {
 
         {/* Playful organization logo */}
         <div className="max-w-4xl mx-auto flex flex-col items-center">
-          <span className="text-sm font-bold italic tracking-wide text-[#9A9483] font-mono">the</span>
+          <span className="text-sm font-bold italic tracking-wide text-[#9A9483] dark:text-stone-400 font-mono">the</span>
           
           {/* Hand-drawn multicolour typographic block */}
           <h1 className="text-3xl md:text-5xl font-serif font-bold tracking-tight mt-0.5 select-none flex items-center justify-center gap-0.5">
@@ -254,124 +279,216 @@ export default function App() {
             <span className="text-[#E7AB79]">i</span>
             <span className="text-[#8E613B]">n</span>
             <span className="text-[#4D5C4F]">g</span>
-            <span className="text-[#2D3A30] ml-3 font-medium tracking-normal">collective</span>
+            <span className="text-[#2D3A30] dark:text-[#a5bca7] ml-3 font-medium tracking-normal">collective</span>
           </h1>
 
           {/* Underline underline illustration */}
-          <div className="w-48 h-[2px] bg-[#E6E2D3] mt-2 relative">
-            <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 bg-white px-2">
+          <div className="w-48 h-[2px] bg-[#E6E2D3] dark:bg-stone-700 mt-2 relative">
+            <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 bg-white dark:bg-[#1a1e1b] px-2">
               <Heart className="w-3.5 h-3.5 text-[#E7AB79] fill-[#E7AB79] animate-pulse" />
             </span>
           </div>
 
-          <p className="text-[10px] md:text-xs font-bold tracking-[0.25em] text-[#9A9483] uppercase mt-4">
+          <p className="text-[10px] md:text-xs font-bold tracking-[0.25em] text-[#9A9483] dark:text-stone-400 uppercase mt-4">
             LEARN. GROW. SUCCEED. TOGETHER.
           </p>
         </div>
       </header>
 
       {/* Main Navigation Row */}
-      <nav className="bg-white border-b border-[#E6E2D3] sticky top-0 z-30 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-14 overflow-x-auto scrollbar-none">
-          {/* Nav Tabs */}
-          <div className="flex gap-1">
-            <button
-              onClick={() => setActiveTab('about')}
-              className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'about'
-                  ? 'bg-[#5F7161]/10 border-[#5F7161] text-[#2D3A30] shadow-sm'
-                  : 'border-transparent text-[#9A9483] hover:text-[#2D3A30] hover:bg-[#5F7161]/5'
-              }`}
-            >
-              <Info className="w-4 h-4 text-[#E7AB79]" />
-              About Us
-            </button>
-
-            <button
-              onClick={() => setActiveTab('tutors')}
-              className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'tutors'
-                  ? 'bg-[#5F7161]/10 border-[#5F7161] text-[#2D3A30] shadow-sm'
-                  : 'border-transparent text-[#9A9483] hover:text-[#2D3A30] hover:bg-[#5F7161]/5'
-              }`}
-            >
-              <Compass className="w-4 h-4 text-[#A25B5B]" />
-              Tutor Profiles
-            </button>
-
-            <button
-              onClick={() => setActiveTab('calendar')}
-              className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'calendar'
-                  ? 'bg-[#5F7161]/10 border-[#5F7161] text-[#2D3A30] shadow-sm'
-                  : 'border-transparent text-[#9A9483] hover:text-[#2D3A30] hover:bg-[#5F7161]/5'
-              }`}
-            >
-              <Calendar className="w-4 h-4 text-[#5F7161]" />
-              Session Calendar
-            </button>
-
-            <button
-              onClick={() => setActiveTab('questions')}
-              className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'questions'
-                  ? 'bg-[#5F7161]/10 border-[#5F7161] text-[#2D3A30] shadow-sm'
-                  : 'border-transparent text-[#9A9483] hover:text-[#2D3A30] hover:bg-[#5F7161]/5'
-              }`}
-            >
-              <MessageSquare className="w-4 h-4 text-[#8E613B]" />
-              Questions Board
-            </button>
-
-            <button
-              onClick={() => setActiveTab('contact')}
-              className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'contact'
-                  ? 'bg-[#5F7161]/10 border-[#5F7161] text-[#2D3A30] shadow-sm'
-                  : 'border-transparent text-[#9A9483] hover:text-[#2D3A30] hover:bg-[#5F7161]/5'
-              }`}
-            >
-              <PhoneCall className="w-4 h-4 text-[#5F7161]" />
-              Contact Us
-            </button>
-
-            <button
-              onClick={() => setActiveTab('python-api')}
-              className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'python-api'
-                  ? 'bg-slate-800 text-white border-slate-700 shadow-sm'
-                  : 'border-transparent text-[#9A9483] hover:text-[#2D3A30] hover:bg-[#5F7161]/5'
-              }`}
-            >
-              <Code className="w-4 h-4 text-sky-500" />
-              Python AI API
-            </button>
-
-            {currentUser && (
+      <nav className="bg-white dark:bg-[#1a1e1b] border-b border-[#E6E2D3] dark:border-stone-800 sticky top-0 z-30 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-14 relative">
+          {/* Nav Tabs Dropdown */}
+          <div className="flex-1 flex gap-4 h-full items-center mr-4">
+            {/* Services Dropdown */}
+            <div className="relative">
               <button
-                onClick={() => setActiveTab('dashboard')}
-                className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all flex items-center gap-1.5 cursor-pointer ${
-                  activeTab === 'dashboard'
-                    ? 'bg-[#5F7161]/10 border-[#5F7161] text-[#2D3A30] shadow-sm'
-                    : 'border-transparent text-[#9A9483] hover:text-[#2D3A30] hover:bg-[#5F7161]/5'
-                }`}
+                onClick={() => setServicesMenuOpen(!servicesMenuOpen)}
+                className="px-4 py-2 text-xs font-bold rounded-xl border border-[#E6E2D3] dark:border-stone-800 bg-white dark:bg-[#1a1e1b] text-[#2D3A30] dark:text-[#a5bca7] hover:bg-[#5F7161]/5 dark:hover:bg-[#5F7161]/10 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
               >
-                <LayoutDashboard className="w-4 h-4 text-[#5F7161]" />
-                Dashboard
+                <Grid className="w-4 h-4 text-[#5F7161]" />
+                <span>Explore Services</span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform text-[#9A9483] ${servicesMenuOpen ? 'rotate-180' : ''}`} />
               </button>
-            )}
+              
+              {servicesMenuOpen && (
+                <>
+                  {/* Backdrop overlay to handle outside clicks cleanly */}
+                  <div 
+                    className="fixed inset-0 z-30" 
+                    onClick={() => setServicesMenuOpen(false)} 
+                  />
+                  <div className="absolute left-0 mt-2 w-72 md:w-80 bg-white dark:bg-[#1a1e1b] border border-[#E6E2D3] dark:border-stone-800 rounded-2xl shadow-xl z-40 overflow-hidden py-2 animate-fadeIn">
+                    <div className="px-4 py-2 border-b border-[#E6E2D3] dark:border-stone-800 text-[10px] font-bold text-[#9A9483] dark:text-stone-400 uppercase tracking-wider">
+                      School & Cloud Services
+                    </div>
+                    
+                    <div className="divide-y divide-[#E6E2D3]/40 dark:divide-stone-800/40">
+                      {/* Dashboard if logged in */}
+                      {currentUser && (
+                        <button
+                          onClick={() => {
+                            setActiveTab('dashboard');
+                            setServicesMenuOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-[#5F7161]/5 dark:hover:bg-[#5F7161]/10 transition-colors cursor-pointer ${
+                            activeTab === 'dashboard' ? 'bg-[#5F7161]/5 dark:bg-[#5F7161]/10' : ''
+                          }`}
+                        >
+                          <LayoutDashboard className="w-4 h-4 mt-0.5 text-[#5F7161] shrink-0" />
+                          <div>
+                            <div className="text-xs font-bold text-[#2D3A30] dark:text-stone-200">Dashboard</div>
+                            <div className="text-[10px] text-[#9A9483] dark:text-stone-400 font-medium leading-normal">Track lesson history, streaks, and view student status.</div>
+                          </div>
+                        </button>
+                      )}
+
+                      {/* Tutor Profiles */}
+                      <button
+                        onClick={() => {
+                          setActiveTab('tutors');
+                          setServicesMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-[#5F7161]/5 dark:hover:bg-[#5F7161]/10 transition-colors cursor-pointer ${
+                          activeTab === 'tutors' ? 'bg-[#5F7161]/5 dark:bg-[#5F7161]/10' : ''
+                        }`}
+                      >
+                        <Compass className="w-4 h-4 mt-0.5 text-[#A25B5B] shrink-0" />
+                        <div>
+                          <div className="text-xs font-bold text-[#2D3A30] dark:text-stone-200">Tutor Profiles</div>
+                          <div className="text-[10px] text-[#9A9483] dark:text-stone-400 font-medium leading-normal">Meet professional mentors and schedule target subjects.</div>
+                        </div>
+                      </button>
+
+                      {/* Session Calendar */}
+                      <button
+                        onClick={() => {
+                          setActiveTab('calendar');
+                          setServicesMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-[#5F7161]/5 dark:hover:bg-[#5F7161]/10 transition-colors cursor-pointer ${
+                          activeTab === 'calendar' ? 'bg-[#5F7161]/5 dark:bg-[#5F7161]/10' : ''
+                        }`}
+                      >
+                        <Calendar className="w-4 h-4 mt-0.5 text-[#5F7161] shrink-0" />
+                        <div>
+                          <div className="text-xs font-bold text-[#2D3A30] dark:text-stone-200">Session Calendar</div>
+                          <div className="text-[10px] text-[#9A9483] dark:text-stone-400 font-medium leading-normal">Schedule upcoming slots or view reservation timestamps.</div>
+                        </div>
+                      </button>
+
+                      {/* Questions Board */}
+                      <button
+                        onClick={() => {
+                          setActiveTab('questions');
+                          setServicesMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-[#5F7161]/5 dark:hover:bg-[#5F7161]/10 transition-colors cursor-pointer ${
+                          activeTab === 'questions' ? 'bg-[#5F7161]/5 dark:bg-[#5F7161]/10' : ''
+                        }`}
+                      >
+                        <MessageSquare className="w-4 h-4 mt-0.5 text-[#8E613B] shrink-0" />
+                        <div>
+                          <div className="text-xs font-bold text-[#2D3A30] dark:text-stone-200">Questions Board</div>
+                          <div className="text-[10px] text-[#9A9483] dark:text-stone-400 font-medium leading-normal">Ask academic questions and receive verified answers.</div>
+                        </div>
+                      </button>
+
+                      {/* Microservices Hub */}
+                      <button
+                        onClick={() => {
+                          setActiveTab('microservices');
+                          setServicesMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-[#5F7161]/5 dark:hover:bg-[#5F7161]/10 transition-colors cursor-pointer ${
+                          activeTab === 'microservices' ? 'bg-[#5F7161]/5 dark:bg-[#5F7161]/10' : ''
+                        }`}
+                      >
+                        <Code className="w-4 h-4 mt-0.5 text-sky-500 shrink-0" />
+                        <div>
+                          <div className="text-xs font-bold text-[#2D3A30] dark:text-stone-200">Microservices Hub</div>
+                          <div className="text-[10px] text-[#9A9483] dark:text-stone-400 font-medium leading-normal">Interactive sandbox for Azure, Redis, Stripe, CI/CD.</div>
+                        </div>
+                      </button>
+
+                      {/* About Us */}
+                      <button
+                        onClick={() => {
+                          setActiveTab('about');
+                          setServicesMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-[#5F7161]/5 dark:hover:bg-[#5F7161]/10 transition-colors cursor-pointer ${
+                          activeTab === 'about' ? 'bg-[#5F7161]/5 dark:bg-[#5F7161]/10' : ''
+                        }`}
+                      >
+                        <Info className="w-4 h-4 mt-0.5 text-[#E7AB79] shrink-0" />
+                        <div>
+                          <div className="text-xs font-bold text-[#2D3A30] dark:text-stone-200">About Us</div>
+                          <div className="text-[10px] text-[#9A9483] dark:text-stone-400 font-medium leading-normal">Our vision of cooperative learning and collective education.</div>
+                        </div>
+                      </button>
+
+                      {/* Contact Us */}
+                      <button
+                        onClick={() => {
+                          setActiveTab('contact');
+                          setServicesMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-[#5F7161]/5 dark:hover:bg-[#5F7161]/10 transition-colors cursor-pointer ${
+                          activeTab === 'contact' ? 'bg-[#5F7161]/5 dark:bg-[#5F7161]/10' : ''
+                        }`}
+                      >
+                        <PhoneCall className="w-4 h-4 mt-0.5 text-[#5F7161] shrink-0" />
+                        <div>
+                          <div className="text-xs font-bold text-[#2D3A30] dark:text-stone-200">Contact Us</div>
+                          <div className="text-[10px] text-[#9A9483] dark:text-stone-400 font-medium leading-normal">Get in touch with administrators or tutor service reps.</div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Active view badge */}
+            <div className="hidden sm:flex items-center gap-2 text-xs text-[#9A9483] dark:text-stone-400 font-mono font-bold uppercase border-l border-[#E6E2D3] dark:border-stone-800 pl-4 h-6">
+              <span>View:</span>
+              <span className="px-2.5 py-0.5 bg-[#5F7161]/10 text-[#2D3A30] dark:text-[#a5bca7] rounded-lg border border-[#5F7161]/25">
+                {activeTab === 'about' && 'About Us'}
+                {activeTab === 'tutors' && 'Tutor Profiles'}
+                {activeTab === 'calendar' && 'Session Calendar'}
+                {activeTab === 'questions' && 'Questions Board'}
+                {activeTab === 'contact' && 'Contact Us'}
+                {activeTab === 'microservices' && 'Microservices Hub'}
+                {activeTab === 'dashboard' && 'Dashboard'}
+              </span>
+            </div>
           </div>
 
           {/* Right Section: Auth & Notifications */}
           <div className="flex items-center gap-2 pl-4">
+
+            {/* Theme Toggle Button */}
+            <button
+              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+              className="p-2 border border-[#E6E2D3] dark:border-stone-800 rounded-xl hover:bg-[#5F7161]/5 dark:hover:bg-[#5F7161]/10 transition-colors cursor-pointer bg-white dark:bg-[#1a1e1b] text-[#2D3A30] dark:text-stone-300 shadow-sm"
+              title={theme === 'light' ? "Switch to Dark Theme" : "Switch to Light Theme"}
+              id="theme-toggle-button"
+            >
+              {theme === 'light' ? (
+                <Moon className="w-4 h-4 text-slate-700" />
+              ) : (
+                <Sun className="w-4 h-4 text-amber-500 fill-amber-400" />
+              )}
+            </button>
             
             {/* Bell Notifications Dropdown Trigger */}
             <div className="relative">
               <button
                 onClick={() => setBellMenuOpen(!bellMenuOpen)}
-                className="p-2 border border-[#E6E2D3] rounded-xl hover:bg-[#5F7161]/5 transition-colors relative cursor-pointer bg-white"
+                className="p-2 border border-[#E6E2D3] dark:border-stone-800 rounded-xl hover:bg-[#5F7161]/5 dark:hover:bg-[#5F7161]/10 transition-colors relative cursor-pointer bg-white dark:bg-[#1a1e1b]"
               >
-                <Bell className="w-4 h-4 text-[#2D3A30]" />
+                <Bell className="w-4 h-4 text-[#2D3A30] dark:text-stone-300" />
                 {unreadCount > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 bg-[#E7AB79] text-white font-bold text-[9px] px-1.5 py-0.5 rounded-full border border-white animate-pulse">
                     {unreadCount}
@@ -381,7 +498,7 @@ export default function App() {
 
               {/* Notification Bell Menu */}
               {bellMenuOpen && (
-                <div className="absolute right-0 mt-3 w-80 bg-white border border-[#E6E2D3] rounded-xl shadow-lg overflow-hidden z-40">
+                <div className="absolute right-0 mt-3 w-80 bg-white dark:bg-[#1a1e1b] border border-[#E6E2D3] dark:border-stone-800 rounded-xl shadow-lg overflow-hidden z-40">
                   <div className="p-3 bg-[#5F7161] text-white flex justify-between items-center">
                     <span className="text-xs font-bold tracking-wider uppercase">Notifications</span>
                     {unreadCount > 0 && (
@@ -393,20 +510,20 @@ export default function App() {
                       </button>
                     )}
                   </div>
-                  <div className="max-h-64 overflow-y-auto divide-y divide-[#E6E2D3]">
+                  <div className="max-h-64 overflow-y-auto divide-y divide-[#E6E2D3] dark:divide-stone-800">
                     {notifications.length > 0 ? (
                       notifications.map((notif) => (
-                        <div key={notif.id} className={`p-3 text-left hover:bg-[#5F7161]/5 transition-colors ${!notif.read ? 'bg-[#5F7161]/5' : ''}`}>
+                        <div key={notif.id} className={`p-3 text-left hover:bg-[#5F7161]/5 dark:hover:bg-[#5F7161]/10 transition-colors ${!notif.read ? 'bg-[#5F7161]/5 dark:bg-[#5F7161]/10' : ''}`}>
                           <div className="flex justify-between items-start">
-                            <h5 className="text-xs font-bold text-[#2D3A30]">{notif.title}</h5>
+                            <h5 className="text-xs font-bold text-[#2D3A30] dark:text-stone-200">{notif.title}</h5>
                             {!notif.read && <span className="w-2 h-2 rounded-full bg-[#E7AB79] flex-shrink-0 mt-1" />}
                           </div>
-                          <p className="text-[11px] text-[#6B6B6B] mt-0.5 font-medium leading-relaxed">{notif.message}</p>
-                          <span className="text-[9px] text-[#9A9483] font-semibold block mt-1">{new Date(notif.createdAt).toLocaleDateString()}</span>
+                          <p className="text-[11px] text-[#6B6B6B] dark:text-stone-300 mt-0.5 font-medium leading-relaxed">{notif.message}</p>
+                          <span className="text-[9px] text-[#9A9483] dark:text-stone-400 font-semibold block mt-1">{new Date(notif.createdAt).toLocaleDateString()}</span>
                         </div>
                       ))
                     ) : (
-                      <div className="p-6 text-center text-xs text-[#9A9483] font-bold">
+                      <div className="p-6 text-center text-xs text-[#9A9483] dark:text-stone-400 font-bold">
                         No notifications yet. Play, book, or ask a question to see automated alarms!
                       </div>
                     )}
@@ -417,14 +534,26 @@ export default function App() {
 
             {/* User Session Profile controls */}
             {currentUser ? (
-              <div className="flex items-center gap-1.5">
-                <div className="hidden sm:flex flex-col items-end pr-1 text-right">
-                  <span className="text-xs font-bold leading-tight text-neutral-800">{currentUser.fullName}</span>
-                  <span className="text-[9px] font-semibold text-[#9A9483] uppercase tracking-widest leading-none">{currentUser.role}</span>
+              <div className="flex items-center gap-2">
+                {currentUser.avatarUrl ? (
+                  <img
+                    src={currentUser.avatarUrl}
+                    alt={currentUser.fullName}
+                    className="w-8 h-8 rounded-lg object-cover border border-[#E6E2D3] dark:border-stone-800"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-lg bg-[#FAF9F5] dark:bg-stone-800 border border-[#E6E2D3] dark:border-stone-700 flex items-center justify-center text-[#9A9483] dark:text-stone-400">
+                    <UserIcon className="w-4 h-4" />
+                  </div>
+                )}
+                <div className="hidden sm:flex flex-col items-end text-right">
+                  <span className="text-xs font-bold leading-tight text-neutral-800 dark:text-stone-200">{currentUser.fullName}</span>
+                  <span className="text-[9px] font-semibold text-[#9A9483] dark:text-stone-400 uppercase tracking-widest leading-none">{currentUser.role}</span>
                 </div>
                 <button
                   onClick={handleSignOut}
-                  className="p-2 border border-[#E6E2D3] hover:bg-rose-50/50 text-[#9A9483] hover:text-rose-600 rounded-xl transition-colors cursor-pointer bg-white"
+                  className="p-2 border border-[#E6E2D3] dark:border-stone-800 hover:bg-rose-50/50 dark:hover:bg-rose-950/45 text-[#9A9483] dark:text-stone-400 hover:text-rose-600 rounded-xl transition-colors cursor-pointer bg-white dark:bg-[#1a1e1b]"
                   title="Sign Out"
                 >
                   <LogOut className="w-4 h-4" />
@@ -434,7 +563,7 @@ export default function App() {
               <div className="flex gap-1.5">
                 <button
                   onClick={() => { setAuthModalTab('signin'); setAuthModalOpen(true); }}
-                  className="px-3.5 py-2 text-xs font-bold border border-[#E6E2D3] rounded-xl hover:bg-[#5F7161]/5 cursor-pointer bg-white text-[#2D3A30]"
+                  className="px-3.5 py-2 text-xs font-bold border border-[#E6E2D3] dark:border-stone-800 rounded-xl hover:bg-[#5F7161]/5 dark:hover:bg-[#5F7161]/15 cursor-pointer bg-white dark:bg-[#1a1e1b] text-[#2D3A30] dark:text-[#a5bca7]"
                 >
                   Login
                 </button>
@@ -697,9 +826,10 @@ export default function App() {
           </div>
         )}
 
-        {/* Python API View */}
-        {activeTab === 'python-api' && (
-          <PythonApiAssistant 
+        {/* Microservices View */}
+        {activeTab === 'microservices' && (
+          <MicroservicesHub 
+            currentUser={currentUser}
             onAddNotification={(title, message, type) => {
               db.addNotification(currentUser?.id || 'any', title, message, type);
             }}
@@ -712,16 +842,40 @@ export default function App() {
             
             {/* User Intro Block */}
             <div className="bg-white border border-[#E6E2D3] rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <h3 className="text-xl font-serif font-bold text-[#2D3A30] tracking-tight">
-                  Welcome to Your Control Center, {currentUser.fullName}!
-                </h3>
-                <p className="text-xs text-[#9A9483] font-semibold mt-1">
-                  Role: <span className="text-[#2D3A30] font-bold uppercase tracking-wider">{currentUser.role}</span> • Member since {new Date(currentUser.createdAt).toLocaleDateString()}
-                </p>
+              <div className="flex items-center gap-4">
+                {currentUser.avatarUrl ? (
+                  <img
+                    src={currentUser.avatarUrl}
+                    alt={currentUser.fullName}
+                    className="w-14 h-14 rounded-2xl object-cover border-2 border-[#5F7161] shadow-sm bg-stone-50"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="w-14 h-14 rounded-2xl bg-[#FAF9F5] border border-[#E6E2D3] flex items-center justify-center text-[#9A9483] shrink-0">
+                    <UserIcon className="w-6 h-6" />
+                  </div>
+                )}
+                <div>
+                  <h3 className="text-xl font-serif font-bold text-[#2D3A30] tracking-tight">
+                    Welcome to Your Control Center, {currentUser.fullName}!
+                  </h3>
+                  <p className="text-xs text-[#9A9483] font-semibold mt-1">
+                    Role: <span className="text-[#2D3A30] font-bold uppercase tracking-wider">{currentUser.role}</span> • Member since {new Date(currentUser.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 shrink-0">
+                <button
+                  onClick={() => setIsEditingProfile(!isEditingProfile)}
+                  className={`px-4 py-2 text-xs font-bold rounded-xl transition-all border cursor-pointer shadow-sm ${
+                    isEditingProfile
+                      ? 'bg-stone-100 text-[#2D3A30] border-stone-300 hover:bg-stone-200'
+                      : 'bg-white text-neutral-700 border-[#E6E2D3] hover:bg-[#FAF9F5]'
+                  }`}
+                >
+                  {isEditingProfile ? 'Close Edit' : 'Edit Profile'}
+                </button>
                 <button
                   onClick={() => setActiveTab('tutors')}
                   className="px-4 py-2 text-xs font-bold bg-[#5F7161] text-white hover:bg-[#4D5C4F] border border-[#5F7161] rounded-xl transition-all cursor-pointer shadow-sm"
@@ -731,8 +885,22 @@ export default function App() {
               </div>
             </div>
 
+            {/* Edit Profile Panel */}
+            {isEditingProfile && (
+              <EditProfile
+                currentUser={currentUser}
+                onProfileUpdated={(updatedUser) => {
+                  setCurrentUser(updatedUser);
+                }}
+                onAddNotification={(title, message, type) => {
+                  db.addNotification(currentUser?.id || 'any', title, message, type);
+                }}
+                onClose={() => setIsEditingProfile(false)}
+              />
+            )}
+
             {/* Quick Summary Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               
               <div className="bg-white border border-[#E6E2D3] rounded-xl p-4 shadow-sm">
                 <p className="text-[10px] font-bold text-[#9A9483] uppercase tracking-widest">Active Lessons</p>
@@ -742,16 +910,9 @@ export default function App() {
               </div>
 
               <div className="bg-white border border-[#E6E2D3] rounded-xl p-4 shadow-sm">
-                <p className="text-[10px] font-bold text-[#9A9483] uppercase tracking-widest">Pending Payment</p>
-                <p className="text-2xl font-bold text-[#A25B5B] mt-1">
-                  {sessions.filter(s => s.paymentStatus === 'unpaid' && s.status !== 'cancelled').length}
-                </p>
-              </div>
-
-              <div className="bg-white border border-[#E6E2D3] rounded-xl p-4 shadow-sm">
-                <p className="text-[10px] font-bold text-[#9A9483] uppercase tracking-widest">Hours Learned</p>
+                <p className="text-[10px] font-bold text-[#9A9483] uppercase tracking-widest">Hours Scheduled</p>
                 <p className="text-2xl font-bold text-[#5F7161] mt-1">
-                  {sessions.filter(s => s.paymentStatus === 'paid').length} hrs
+                  {sessions.length} hrs
                 </p>
               </div>
 
@@ -789,24 +950,9 @@ export default function App() {
                       </div>
 
                       <div className="flex flex-wrap items-center gap-3">
-                        {/* Status badges */}
-                        {session.paymentStatus === 'paid' ? (
-                          <span className="px-3 py-1 rounded-full bg-[#5F7161]/10 border border-[#5F7161]/20 text-[#2D3A30] text-xs font-bold">
-                            Paid & Confirmed ✅
-                          </span>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <span className="px-3 py-1 rounded-full bg-rose-50/50 border border-rose-150 text-[#A25B5B] text-xs font-bold">
-                              Unpaid
-                            </span>
-                            <button
-                              onClick={() => triggerPaymentFlow(session)}
-                              className="px-3.5 py-1.5 bg-[#5F7161] hover:bg-[#4D5C4F] text-white font-bold text-xs rounded-xl border border-[#5F7161] cursor-pointer shadow-sm transition-all"
-                            >
-                              Pay Now (${session.amount})
-                            </button>
-                          </div>
-                        )}
+                        <span className="px-3 py-1 rounded-full bg-[#5F7161]/10 border border-[#5F7161]/20 text-[#2D3A30] text-xs font-bold">
+                          Scheduled & Confirmed ✅
+                        </span>
                       </div>
                     </div>
                   ))}

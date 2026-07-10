@@ -202,6 +202,45 @@ export const db = {
     localStorage.removeItem('lt_current_user');
   },
 
+  async updateProfile(userId: string, updates: Partial<User>): Promise<User> {
+    const localUsers = JSON.parse(localStorage.getItem('lt_users') || '[]');
+    const userIndex = localUsers.findIndex((u: any) => u.id === userId);
+    if (userIndex === -1) {
+      // If user is logged in as on-the-fly demo student, register them in lt_users first
+      const currentSession = localStorage.getItem('lt_current_user');
+      if (currentSession) {
+        const currentUser = JSON.parse(currentSession);
+        if (currentUser.id === userId) {
+          const newUser = { ...currentUser, ...updates };
+          localUsers.push(newUser);
+          localStorage.setItem('lt_users', JSON.stringify(localUsers));
+          localStorage.setItem('lt_current_user', JSON.stringify(newUser));
+          return newUser;
+        }
+      }
+      throw new Error('User not found.');
+    }
+
+    const updatedUser = {
+      ...localUsers[userIndex],
+      ...updates
+    };
+
+    localUsers[userIndex] = updatedUser;
+    localStorage.setItem('lt_users', JSON.stringify(localUsers));
+
+    // Update current session
+    const currentSession = localStorage.getItem('lt_current_user');
+    if (currentSession) {
+      const parsed = JSON.parse(currentSession);
+      if (parsed.id === userId) {
+        localStorage.setItem('lt_current_user', JSON.stringify(updatedUser));
+      }
+    }
+
+    return updatedUser;
+  },
+
   // --- TUTORS ---
   async getTutors(): Promise<Tutor[]> {
     return JSON.parse(localStorage.getItem('lt_tutors') || '[]');
@@ -218,8 +257,8 @@ export const db = {
     const newSession: Session = {
       ...sessionData,
       id,
-      status: 'pending',
-      paymentStatus: 'unpaid',
+      status: 'confirmed',
+      paymentStatus: 'paid',
       createdAt: new Date().toISOString()
     };
 
@@ -231,7 +270,7 @@ export const db = {
     this.addNotification(
       newSession.studentId,
       'Session Booked! 📅',
-      `You successfully requested a session with ${newSession.tutorName} for ${newSession.subject} on ${newSession.date} at ${newSession.timeSlot}. Complete payment to confirm.`,
+      `You successfully booked a session with ${newSession.tutorName} for ${newSession.subject} on ${newSession.date} at ${newSession.timeSlot}. Your lesson is fully scheduled and confirmed!`,
       'booking'
     );
 
@@ -239,7 +278,7 @@ export const db = {
     this.addNotification(
       newSession.tutorId,
       'New Session Request 📝',
-      `${newSession.studentName} has requested a session for ${newSession.subject} on ${newSession.date} at ${newSession.timeSlot}.`,
+      `${newSession.studentName} has booked a session for ${newSession.subject} on ${newSession.date} at ${newSession.timeSlot}.`,
       'booking'
     );
 

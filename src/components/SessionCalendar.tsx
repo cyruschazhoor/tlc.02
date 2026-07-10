@@ -110,12 +110,12 @@ export default function SessionCalendar({
   };
 
   return (
-    <div className="bg-white border border-[#E6E2D3] rounded-2xl p-6 shadow-sm">
+    <div className="bg-white dark:bg-[#1c1f1c] border border-[#E6E2D3] dark:border-stone-800 rounded-2xl p-6 shadow-sm">
       <div className="flex flex-col md:flex-row gap-6">
         
         {/* Left Side: Tutor Selector / Info */}
-        <div className="w-full md:w-1/3 border-b md:border-b-0 md:border-r border-[#E6E2D3] pb-6 md:pb-0 md:pr-6">
-          <h3 className="text-lg font-serif font-bold text-[#2D3A30] mb-4 flex items-center gap-2">
+        <div className="w-full md:w-1/3 border-b md:border-b-0 md:border-r border-[#E6E2D3] dark:border-stone-800 pb-6 md:pb-0 md:pr-6">
+          <h3 className="text-lg font-serif font-bold text-[#2D3A30] dark:text-stone-100 mb-4 flex items-center gap-2">
             <span className="p-1.5 bg-[#5F7161]/10 border border-[#5F7161]/25 rounded-xl">
               <CalendarIcon className="w-4 h-4 text-[#5F7161]" />
             </span>
@@ -134,27 +134,27 @@ export default function SessionCalendar({
                 }}
                 className={`w-full p-3 border rounded-xl flex items-center gap-3 transition-all cursor-pointer ${
                   selectedTutor?.id === tutor.id
-                    ? 'bg-[#5F7161]/10 border-[#5F7161] scale-[1.01]'
-                    : 'bg-[#FDFCF8] border-[#E6E2D3] hover:border-[#5F7161]/50'
+                    ? 'bg-[#5F7161]/10 dark:bg-[#5F7161]/25 border-[#5F7161] scale-[1.01]'
+                    : 'bg-[#FDFCF8] dark:bg-[#121513] border-[#E6E2D3] dark:border-stone-800 hover:border-[#5F7161]/50 dark:hover:border-stone-700'
                 }`}
               >
                 <img
                   src={tutor.avatar}
                   alt={tutor.name}
-                  className="w-10 h-10 rounded-xl object-cover border border-[#E6E2D3]"
+                  className="w-10 h-10 rounded-xl object-cover border border-[#E6E2D3] dark:border-stone-800"
                 />
                 <div className="text-left">
-                  <p className="text-sm font-serif font-bold text-[#2D3A30] leading-tight">{tutor.name}</p>
-                  <p className="text-xs text-[#9A9483] font-semibold mt-0.5">${tutor.ratePerHour}/hr • ⭐ {tutor.rating.toFixed(1)}</p>
+                  <p className="text-sm font-serif font-bold text-[#2D3A30] dark:text-stone-100 leading-tight">{tutor.name}</p>
+                  <p className="text-xs text-[#9A9483] dark:text-stone-400 font-semibold mt-0.5">${tutor.ratePerHour}/hr • ⭐ {tutor.rating.toFixed(1)}</p>
                 </div>
               </button>
             ))}
           </div>
 
           {selectedTutor && (
-            <div className="mt-6 p-4 bg-[#E7AB79]/5 border border-dashed border-[#E7AB79]/40 rounded-xl">
-              <h4 className="text-xs font-bold text-[#8E613B] uppercase tracking-wider mb-1">Meet {selectedTutor.name}</h4>
-              <p className="text-xs text-neutral-600 leading-relaxed font-semibold line-clamp-3">
+            <div className="mt-6 p-4 bg-[#E7AB79]/5 dark:bg-[#E7AB79]/10 border border-dashed border-[#E7AB79]/40 dark:border-[#E7AB79]/20 rounded-xl">
+              <h4 className="text-xs font-bold text-[#8E613B] dark:text-[#f3cdad] uppercase tracking-wider mb-1">Meet {selectedTutor.name}</h4>
+              <p className="text-xs text-neutral-600 dark:text-stone-300 leading-relaxed font-semibold line-clamp-3">
                 {selectedTutor.bio}
               </p>
             </div>
@@ -168,7 +168,7 @@ export default function SessionCalendar({
               
               {/* Date Selection */}
               <div>
-                <h3 className="text-sm font-bold text-[#2D3A30] mb-3 uppercase tracking-wider">
+                <h3 className="text-sm font-bold text-[#2D3A30] dark:text-stone-100 mb-3 uppercase tracking-wider">
                   2. Select a Date
                 </h3>
                 
@@ -188,7 +188,7 @@ export default function SessionCalendar({
                         className={`flex-shrink-0 w-16 py-3 border rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer ${
                           isSelected
                             ? 'bg-[#5F7161] border-[#5F7161] text-white shadow-sm'
-                            : 'bg-[#FDFCF8] border-[#E6E2D3] hover:border-[#5F7161]/50 text-neutral-800'
+                            : 'bg-[#FDFCF8] dark:bg-[#121513] border-[#E6E2D3] dark:border-stone-800 hover:border-[#5F7161]/50 dark:hover:border-stone-700 text-neutral-800 dark:text-stone-200'
                         }`}
                       >
                         <span className="text-[10px] font-bold uppercase tracking-wider opacity-75">
@@ -204,14 +204,14 @@ export default function SessionCalendar({
                     );
                   })}
                 </div>
-                <p className="text-xs text-[#9A9483] font-semibold mt-1">
-                  Selected: <span className="text-[#2D3A30] font-bold">{getDayName(selectedDate)}, {formatDate(selectedDate)}</span>
+                <p className="text-xs text-[#9A9483] dark:text-stone-400 font-semibold mt-1">
+                  Selected: <span className="text-[#2D3A30] dark:text-[#a5bca7] font-bold">{getDayName(selectedDate)}, {formatDate(selectedDate)}</span>
                 </p>
               </div>
 
               {/* Time Slots */}
               <div>
-                <h3 className="text-sm font-bold text-[#2D3A30] mb-3 uppercase tracking-wider flex items-center gap-1.5">
+                <h3 className="text-sm font-bold text-[#2D3A30] dark:text-stone-100 mb-3 uppercase tracking-wider flex items-center gap-1.5">
                   <Clock className="w-4 h-4 text-[#E7AB79]" />
                   3. Available Time Slots
                 </h3>
@@ -227,8 +227,8 @@ export default function SessionCalendar({
                           onClick={() => setSelectedTimeSlot(slot)}
                           className={`py-2 text-xs font-bold border rounded-xl transition-all cursor-pointer ${
                             isSelected
-                              ? 'bg-[#5F7161]/10 border-[#5F7161] text-[#2D3A30]'
-                              : 'bg-[#FDFCF8] border-[#E6E2D3] hover:border-[#5F7161]/50 text-[#6B6B6B]'
+                              ? 'bg-[#5F7161]/15 dark:bg-[#5F7161]/25 border-[#5F7161] text-[#2D3A30] dark:text-[#a5bca7]'
+                              : 'bg-[#FDFCF8] dark:bg-[#121513] border-[#E6E2D3] dark:border-stone-800 hover:border-[#5F7161]/50 dark:hover:border-stone-700 text-[#6B6B6B] dark:text-stone-300'
                           }`}
                         >
                           {slot}
@@ -237,7 +237,7 @@ export default function SessionCalendar({
                     })}
                   </div>
                 ) : (
-                  <div className="p-4 bg-[#E7AB79]/5 border border-dashed border-[#E7AB79]/40 rounded-xl flex items-center gap-2.5 text-[#8E613B]">
+                  <div className="p-4 bg-[#E7AB79]/5 dark:bg-[#E7AB79]/10 border border-dashed border-[#E7AB79]/40 dark:border-[#E7AB79]/20 rounded-xl flex items-center gap-2.5 text-[#8E613B] dark:text-[#f3cdad]">
                     <AlertCircle className="w-5 h-5 flex-shrink-0" />
                     <p className="text-xs font-bold leading-relaxed">
                       {selectedTutor.name} has no availability listed for {getDayName(selectedDate)}s. Please try a different date!
@@ -249,25 +249,25 @@ export default function SessionCalendar({
               {/* Subject Dropdown & Notes */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-[#6B6B6B] uppercase tracking-wider block flex items-center gap-1">
-                    <BookOpen className="w-3.5 h-3.5 text-[#5F7161]" />
+                  <label className="text-xs font-bold text-[#6B6B6B] dark:text-stone-300 uppercase tracking-wider block flex items-center gap-1">
+                    <BookOpen className="w-3.5 h-3.5 text-[#5F7161] dark:text-[#a5bca7]" />
                     Subject
                   </label>
                   <select
                     required
                     value={selectedSubject}
                     onChange={(e) => setSelectedSubject(e.target.value)}
-                    className="w-full px-4 py-3 border border-[#E6E2D3] rounded-xl text-sm font-semibold bg-white focus:outline-none focus:border-[#5F7161]/50 transition-colors cursor-pointer text-[#3D3D3D]"
+                    className="w-full px-4 py-3 border border-[#E6E2D3] dark:border-stone-800 rounded-xl text-sm font-semibold bg-white dark:bg-[#121513] text-[#3D3D3D] dark:text-stone-200 focus:outline-none focus:border-[#5F7161] transition-colors cursor-pointer"
                   >
-                    <option value="" disabled>Select a subject...</option>
+                    <option value="" disabled className="dark:bg-stone-900 dark:text-stone-400">Select a subject...</option>
                     {selectedTutor.subjects.map((sub) => (
-                      <option key={sub} value={sub}>{sub}</option>
+                      <option key={sub} value={sub} className="dark:bg-stone-900 dark:text-stone-200">{sub}</option>
                     ))}
                   </select>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-[#6B6B6B] uppercase tracking-wider block flex items-center gap-1">
+                  <label className="text-xs font-bold text-[#6B6B6B] dark:text-stone-300 uppercase tracking-wider block flex items-center gap-1">
                     <MessageSquare className="w-3.5 h-3.5 text-[#E7AB79]" />
                     Learning Goals (Optional)
                   </label>
@@ -276,7 +276,7 @@ export default function SessionCalendar({
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="e.g., preparing for AP Quiz on Friday!"
-                    className="w-full px-4 py-3 border border-[#E6E2D3] rounded-xl text-sm font-semibold bg-white focus:outline-none focus:border-[#5F7161]/50 transition-colors text-[#3D3D3D]"
+                    className="w-full px-4 py-3 border border-[#E6E2D3] dark:border-stone-800 rounded-xl text-sm font-semibold bg-white dark:bg-[#121513] text-[#3D3D3D] dark:text-stone-200 focus:outline-none focus:border-[#5F7161] transition-colors"
                   />
                 </div>
               </div>
@@ -297,10 +297,10 @@ export default function SessionCalendar({
 
             </form>
           ) : (
-            <div className="h-64 flex flex-col items-center justify-center border border-dashed border-[#E6E2D3] rounded-2xl bg-[#FDFCF8] p-6 text-center">
-              <CalendarIcon className="w-12 h-12 text-neutral-300 stroke-1" />
-              <h4 className="text-sm font-serif font-bold text-[#2D3A30] mt-3">Select a Tutor to Start</h4>
-              <p className="text-xs text-neutral-500 max-w-xs mt-1 leading-relaxed font-semibold">
+            <div className="h-64 flex flex-col items-center justify-center border border-dashed border-[#E6E2D3] dark:border-stone-800 rounded-2xl bg-[#FDFCF8] dark:bg-[#121513] p-6 text-center">
+              <CalendarIcon className="w-12 h-12 text-neutral-300 dark:text-stone-700 stroke-1" />
+              <h4 className="text-sm font-serif font-bold text-[#2D3A30] dark:text-stone-100 mt-3">Select a Tutor to Start</h4>
+              <p className="text-xs text-neutral-500 dark:text-stone-400 max-w-xs mt-1 leading-relaxed font-semibold">
                 Please pick one of our wonderful educators from the list on the left to view their calendar and reserve your session.
               </p>
             </div>
