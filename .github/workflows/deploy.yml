@@ -40,16 +40,18 @@ jobs:
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/learning-collective-app:latest
 
       # 5. Continuous Deployment to Azure Container Apps
-     - name: Deploy to Azure Container Apps
-  uses: azure/container-apps-deploy-action@v2
-  with:
-    acrName: ${{ secrets.ACR_NAME }}
-    resourceGroup: learning-collective-rg
-    containerAppName: learning-collective-web
-    imageToDeploy: learning-collective-app:${{ github.sha }}
-    targetPort: 80
-    ingress: external
-    containerAppEnvironment: learning-collective-env
-    environmentVariables: |
-      DATABASE_URL=postgresql://cloudadmin:YourSecurePassword123!@learning-collective-db.postgres.database.azure.com:5432/postgres?sslmode=require
-      NODE_ENV=production
+            # 5. Continuous Deployment to Azure Container Apps
+      - name: Deploy to Azure Container Apps
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          acrName: ${{ secrets.ACR_NAME }}
+          resourceGroup: learning-collective-rg
+          containerAppName: learning-collective-web
+          imageToDeploy: learning-collective-app:${{ github.sha }}
+          targetPort: 80
+          ingress: external
+          containerAppEnvironment: learning-collective-env
+          environmentVariables: |
+            DATABASE_URL=postgresql://cloudadmin:YourSecurePassword123!@learning-collective-db.postgres.database.azure.com:5432/postgres?sslmode=require
+            NODE_ENV=production
+  
