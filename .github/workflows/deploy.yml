@@ -35,8 +35,8 @@ jobs:
       # 4. Build & Push Production Image
       - name: Build and Push Docker Image
         run: |
-          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/learning-collective-app:${{ github.sha }} -t ${{ secrets.ACR_LOGIN_SERVER }}/learning-collective-app:latest .
-          docker push ${{ secrets.ACR_LOGIN_SERVER }}/learning-collective-app:${{ github.sha }}
+          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/learning-collective-app:v1 -t ${{ secrets.ACR_LOGIN_SERVER }}/learning-collective-app:latest .
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/learning-collective-app:v1
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/learning-collective-app:latest
 
       # 5. Continuous Deployment to Azure Container Apps
@@ -47,11 +47,11 @@ jobs:
           acrName: ${{ secrets.ACR_NAME }}
           resourceGroup: learning-collective-rg
           containerAppName: learning-collective-web
-          imageToDeploy: ${{ secrets.ACR_LOGIN_SERVER }}/learning-collective-app:${{ github.sha }}
+          imageToDeploy: ${{ secrets.ACR_LOGIN_SERVER }}/learning-collective-app:v1
           targetPort: 80
           ingress: external
           containerAppEnvironment: learning-collective-env
           environmentVariables: |
-            DATABASE_URL=postgresql://cloudadmin:YourSecurePassword123!@learning-collective-db.postgres.database.azure.com:5432/postgres?sslmode=require
+            DATABASE_URL=postgresql://cloudadmin:Celestine1$$%%^^@learning-collective-db.postgres.database.azure.com:5432/postgres?sslmode=require
             NODE_ENV=production
   
