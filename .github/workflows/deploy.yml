@@ -47,7 +47,7 @@ jobs:
           acrName: ${{ secrets.ACR_NAME }}
           resourceGroup: learning-collective-rg
           containerAppName: learning-collective-web
-          imageToDeploy: learning-collective-app:${{ github.sha }}
+          imageToDeploy: ${{ secrets.ACR_LOGIN_SERVER }}/learning-collective-app:${{ github.sha }}
           targetPort: 80
           ingress: external
           containerAppEnvironment: learning-collective-env
