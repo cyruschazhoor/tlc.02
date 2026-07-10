@@ -1,16 +1,24 @@
-# Step 1: Choose the starting environment (Node.js example)
-FROM node:18-alpine
+# Build stage
+FROM node:20-alpine AS builder
 
-# Step 2: Create a folder inside the container for your app
 WORKDIR /app
 
-# Step 3: Copy your project files into that folder
 COPY package*.json ./
-RUN npm install
+RUN npm ci
+
 COPY . .
+RUN npm run build
 
-# Step 4: Open a door for people to visit your app
-EXPOSE 3000
+# Production stage
+FROM nginx:alpine
 
-# Step 5: The final command to turn your app on
-CMD ["npm", "run", "dev"]
+# Copy custom nginx config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy built assets from builder
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

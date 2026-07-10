@@ -39,6 +39,7 @@ export interface Session {
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
   paymentStatus: 'unpaid' | 'paid';
   amount: number;
+  ratingGiven?: number;
   createdAt: string;
 }
 

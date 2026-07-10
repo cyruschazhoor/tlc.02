@@ -315,6 +315,71 @@ export const db = {
     return updatedSession;
   },
 
+  async completeSession(sessionId: string): Promise<Session> {
+    const sessions = JSON.parse(localStorage.getItem('lt_sessions') || '[]');
+    const sessionIndex = sessions.findIndex((s: Session) => s.id === sessionId);
+    if (sessionIndex === -1) throw new Error('Session not found.');
+
+    sessions[sessionIndex].status = 'completed';
+    localStorage.setItem('lt_sessions', JSON.stringify(sessions));
+
+    const updatedSession = sessions[sessionIndex];
+
+    // Notification for Student
+    this.addNotification(
+      updatedSession.studentId,
+      'Session Completed! 🎓',
+      `Your session with ${updatedSession.tutorName} on ${updatedSession.date} is now complete. Please take a moment to leave a rating!`,
+      'system'
+    );
+
+    return updatedSession;
+  },
+
+  async rateTutor(tutorId: string, rating: number): Promise<Tutor> {
+    const tutors = JSON.parse(localStorage.getItem('lt_tutors') || '[]');
+    const tutorIndex = tutors.findIndex((t: Tutor) => t.id === tutorId);
+    if (tutorIndex === -1) throw new Error('Tutor not found.');
+
+    const tutor = tutors[tutorIndex];
+    const oldRating = tutor.rating || 5.0;
+    const oldReviewsCount = tutor.reviewsCount || 0;
+    
+    const newReviewsCount = oldReviewsCount + 1;
+    const newRating = ((oldRating * oldReviewsCount) + rating) / newReviewsCount;
+
+    tutors[tutorIndex] = {
+      ...tutor,
+      rating: parseFloat(newRating.toFixed(2)),
+      reviewsCount: newReviewsCount
+    };
+
+    localStorage.setItem('lt_tutors', JSON.stringify(tutors));
+    return tutors[tutorIndex];
+  },
+
+  async rateSession(sessionId: string, ratingGiven: number): Promise<Session> {
+    const sessions = JSON.parse(localStorage.getItem('lt_sessions') || '[]');
+    const sessionIndex = sessions.findIndex((s: Session) => s.id === sessionId);
+    if (sessionIndex === -1) throw new Error('Session not found.');
+
+    const session = sessions[sessionIndex];
+    session.ratingGiven = ratingGiven;
+    localStorage.setItem('lt_sessions', JSON.stringify(sessions));
+
+    await this.rateTutor(session.tutorId, ratingGiven);
+
+    // Notification for Student
+    this.addNotification(
+      session.studentId,
+      'Thank you for your rating! ⭐',
+      `You rated your session with ${session.tutorName} as ${ratingGiven} stars. Your feedback helps our community grow!`,
+      'system'
+    );
+
+    return session;
+  },
+
   // --- QUESTIONS BOARD ---
   async getQuestions(): Promise<Question[]> {
     return JSON.parse(localStorage.getItem('lt_questions') || '[]');

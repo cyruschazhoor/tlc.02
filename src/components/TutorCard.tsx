@@ -38,14 +38,14 @@ export default function TutorCard({ tutor, onBook }: TutorCardProps) {
       <div>
         {/* Profile Header */}
         <div className="flex items-start gap-4">
-          <div className="relative">
+          <div className="flex flex-col items-center shrink-0">
             <img
               src={tutor.avatar}
               alt={tutor.name}
               className="w-16 h-16 rounded-xl object-cover border border-[#E6E2D3] dark:border-stone-800"
             />
-            <span className="absolute -bottom-1.5 -right-1.5 bg-[#E7AB79]/15 dark:bg-[#E7AB79]/20 text-[#8E613B] dark:text-[#f3cdad] font-bold text-xs px-1.5 py-0.5 rounded-lg border border-[#E7AB79]/20 dark:border-stone-800 flex items-center gap-0.5 shadow-sm">
-              <Star className="w-3 h-3 fill-[#E7AB79] text-[#E7AB79]" />
+            <span className="mt-2 bg-[#E7AB79]/15 dark:bg-[#E7AB79]/20 text-[#8E613B] dark:text-[#f3cdad] font-bold text-[11px] px-2 py-0.5 rounded-lg border border-[#E7AB79]/20 dark:border-stone-800 flex items-center gap-1 shadow-sm w-full justify-center">
+              <Star className="w-3.5 h-3.5 fill-[#E7AB79] text-[#E7AB79]" />
               {tutor.rating.toFixed(1)}
             </span>
           </div>

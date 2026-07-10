@@ -26,7 +26,8 @@ import {
   Sun,
   Moon,
   ChevronDown,
-  Grid
+  Grid,
+  Star
 } from 'lucide-react';
 import TutorCard from './components/TutorCard';
 import SessionCalendar from './components/SessionCalendar';
@@ -171,6 +172,35 @@ export default function App() {
       if (currentUser) {
         const updated = await db.getSessions(currentUser.id);
         setSessions(updated);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Handle Completing a Session
+  const handleCompleteSession = async (sessionId: string) => {
+    try {
+      await db.completeSession(sessionId);
+      if (currentUser) {
+        const updated = await db.getSessions(currentUser.id);
+        setSessions(updated);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Handle Rating a Session/Tutor
+  const handleRateSession = async (sessionId: string, rating: number) => {
+    try {
+      await db.rateSession(sessionId, rating);
+      if (currentUser) {
+        const updated = await db.getSessions(currentUser.id);
+        setSessions(updated);
+        // Refresh tutors to update ratings in profiles list
+        const updatedTutors = await db.getTutors();
+        setTutors(updatedTutors);
       }
     } catch (err) {
       console.error(err);
@@ -498,37 +528,44 @@ export default function App() {
 
               {/* Notification Bell Menu */}
               {bellMenuOpen && (
-                <div className="absolute right-0 mt-3 w-80 bg-white dark:bg-[#1a1e1b] border border-[#E6E2D3] dark:border-stone-800 rounded-xl shadow-lg overflow-hidden z-40">
-                  <div className="p-3 bg-[#5F7161] text-white flex justify-between items-center">
-                    <span className="text-xs font-bold tracking-wider uppercase">Notifications</span>
-                    {unreadCount > 0 && (
-                      <button 
-                        onClick={handleMarkAllRead}
-                        className="text-[9px] font-bold bg-white/20 px-2 py-0.5 rounded-lg hover:bg-white/30 transition-colors cursor-pointer"
-                      >
-                        Mark All Read
-                      </button>
-                    )}
-                  </div>
-                  <div className="max-h-64 overflow-y-auto divide-y divide-[#E6E2D3] dark:divide-stone-800">
-                    {notifications.length > 0 ? (
-                      notifications.map((notif) => (
-                        <div key={notif.id} className={`p-3 text-left hover:bg-[#5F7161]/5 dark:hover:bg-[#5F7161]/10 transition-colors ${!notif.read ? 'bg-[#5F7161]/5 dark:bg-[#5F7161]/10' : ''}`}>
-                          <div className="flex justify-between items-start">
-                            <h5 className="text-xs font-bold text-[#2D3A30] dark:text-stone-200">{notif.title}</h5>
-                            {!notif.read && <span className="w-2 h-2 rounded-full bg-[#E7AB79] flex-shrink-0 mt-1" />}
+                <>
+                  {/* Backdrop overlay to handle outside clicks cleanly */}
+                  <div 
+                    className="fixed inset-0 z-30" 
+                    onClick={() => setBellMenuOpen(false)} 
+                  />
+                  <div className="absolute right-0 mt-3 w-[calc(100vw-2rem)] sm:w-80 max-w-sm bg-white dark:bg-[#1a1e1b] border border-[#E6E2D3] dark:border-stone-800 rounded-xl shadow-lg overflow-hidden z-40 animate-fadeIn">
+                    <div className="p-3 bg-[#5F7161] text-white flex justify-between items-center">
+                      <span className="text-xs font-bold tracking-wider uppercase">Notifications</span>
+                      {unreadCount > 0 && (
+                        <button 
+                          onClick={handleMarkAllRead}
+                          className="text-[9px] font-bold bg-white/20 px-2 py-0.5 rounded-lg hover:bg-white/30 transition-colors cursor-pointer"
+                        >
+                          Mark All Read
+                        </button>
+                      )}
+                    </div>
+                    <div className="max-h-64 overflow-y-auto divide-y divide-[#E6E2D3] dark:divide-stone-800">
+                      {notifications.length > 0 ? (
+                        notifications.map((notif) => (
+                          <div key={notif.id} className={`p-3 text-left hover:bg-[#5F7161]/5 dark:hover:bg-[#5F7161]/10 transition-colors ${!notif.read ? 'bg-[#5F7161]/5 dark:bg-[#5F7161]/10' : ''}`}>
+                            <div className="flex justify-between items-start">
+                              <h5 className="text-xs font-bold text-[#2D3A30] dark:text-stone-200">{notif.title}</h5>
+                              {!notif.read && <span className="w-2 h-2 rounded-full bg-[#E7AB79] flex-shrink-0 mt-1" />}
+                            </div>
+                            <p className="text-[11px] text-[#6B6B6B] dark:text-stone-300 mt-0.5 font-medium leading-relaxed">{notif.message}</p>
+                            <span className="text-[9px] text-[#9A9483] dark:text-stone-400 font-semibold block mt-1">{new Date(notif.createdAt).toLocaleDateString()}</span>
                           </div>
-                          <p className="text-[11px] text-[#6B6B6B] dark:text-stone-300 mt-0.5 font-medium leading-relaxed">{notif.message}</p>
-                          <span className="text-[9px] text-[#9A9483] dark:text-stone-400 font-semibold block mt-1">{new Date(notif.createdAt).toLocaleDateString()}</span>
+                        ))
+                      ) : (
+                        <div className="p-6 text-center text-xs text-[#9A9483] dark:text-stone-400 font-bold">
+                          No notifications yet. Play, book, or ask a question to see automated alarms!
                         </div>
-                      ))
-                    ) : (
-                      <div className="p-6 text-center text-xs text-[#9A9483] dark:text-stone-400 font-bold">
-                        No notifications yet. Play, book, or ask a question to see automated alarms!
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
+                </>
               )}
             </div>
 
@@ -950,9 +987,59 @@ export default function App() {
                       </div>
 
                       <div className="flex flex-wrap items-center gap-3">
-                        <span className="px-3 py-1 rounded-full bg-[#5F7161]/10 border border-[#5F7161]/20 text-[#2D3A30] text-xs font-bold">
-                          Scheduled & Confirmed ✅
-                        </span>
+                        {session.status === 'confirmed' && (
+                          <div className="flex items-center gap-2">
+                            <span className="px-3 py-1 rounded-full bg-[#5F7161]/10 border border-[#5F7161]/20 text-[#2D3A30] text-xs font-bold">
+                              Scheduled & Confirmed ✅
+                            </span>
+                            <button
+                              onClick={() => handleCompleteSession(session.id)}
+                              className="px-3 py-1.5 bg-[#E7AB79] hover:bg-[#d69966] text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm"
+                            >
+                              Mark Completed 🎓
+                            </button>
+                          </div>
+                        )}
+                        {session.status === 'completed' && (
+                          <div className="flex flex-col sm:items-end gap-1.5">
+                            <span className="px-3 py-1 rounded-full bg-slate-100 dark:bg-stone-800 border border-slate-200 dark:border-stone-700 text-[#2D3A30] dark:text-stone-300 text-xs font-bold">
+                              Session Completed 🎓
+                            </span>
+                            {session.ratingGiven ? (
+                              <div className="flex items-center gap-1 text-amber-500 font-bold text-xs bg-amber-500/10 px-2 py-0.5 rounded-lg border border-amber-500/20">
+                                <span>Rated:</span>
+                                <div className="flex">
+                                  {Array.from({ length: 5 }).map((_, i) => (
+                                    <Star
+                                      key={i}
+                                      className={`w-3 h-3 ${
+                                        i < (session.ratingGiven || 0)
+                                          ? 'fill-amber-500 text-amber-500'
+                                          : 'text-stone-300 dark:text-stone-600'
+                                      }`}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-[10px] font-bold text-[#9A9483] uppercase tracking-wider">Rate Tutor:</span>
+                                <div className="flex items-center gap-0.5">
+                                  {[1, 2, 3, 4, 5].map((starVal) => (
+                                    <button
+                                      key={starVal}
+                                      onClick={() => handleRateSession(session.id, starVal)}
+                                      className="text-stone-300 hover:text-amber-500 transition-colors cursor-pointer p-0.5"
+                                      title={`Rate ${starVal} Stars`}
+                                    >
+                                      <Star className="w-4 h-4 hover:scale-110 active:scale-95 transition-transform hover:fill-amber-500" />
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
