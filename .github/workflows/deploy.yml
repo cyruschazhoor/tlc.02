@@ -11,47 +11,85 @@ permissions:
   packages: write
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-      # 1. Pull the codebase
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Authenticate with Azure
       - name: Log in to Azure
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # 3. Authenticate with Docker Registry
-      - name: Log in to ACR
-        uses: azure/docker-login@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          login-server: ${{ secrets.ACR_LOGIN_SERVER }}
-          username: ${{ secrets.ACR_USERNAME }}
-          password: ${{ secrets.ACR_PASSWORD }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 4. Build & Push Production Image
-      - name: Build and Push Docker Image
-        run: |
-          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/learning-collective-app:v1 -t ${{ secrets.ACR_LOGIN_SERVER }}/learning-collective-app:latest .
-          docker push ${{ secrets.ACR_LOGIN_SERVER }}/learning-collective-app:v1
-          docker push ${{ secrets.ACR_LOGIN_SERVER }}/learning-collective-app:latest
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
 
-      # 5. Continuous Deployment to Azure Container Apps
-            # 5. Continuous Deployment to Azure Container Apps
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build # Makes sure deploy only runs after build finishes successfully
+    
+    steps:
+      # =========================================================================
+      # METHOD A: AZURE LOGIN (OIDC / Federated Credentials)
+      # To use this, you must set up an App Registration in Microsoft Entra ID,
+      # configure Federated Credentials for GitHub, assign it a Contributor/Owner
+      # role on your Web App, and add the three AZURE_* secrets to your GitHub repo.
+      # =========================================================================
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Now the deploy action will use the credentials established in the login step
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'learningcollective-app' # Replace with your actual Azure App name if different
+          images: 'ghcr.io/${{ github.repository }}:latest'
+
       - name: Deploy to Azure Container Apps
         uses: azure/container-apps-deploy-action@v2
         with:
           acrName: ${{ secrets.ACR_NAME }}
-          resourceGroup: learning-collective-rg
-          containerAppName: learning-collective-web
-          imageToDeploy: ${{ secrets.ACR_LOGIN_SERVER }}/learning-collective-app:v1
-          targetPort: 80
-          ingress: external
-          containerAppEnvironment: learning-collective-env
-          environmentVariables: |
-            DATABASE_URL=postgresql://cloudadmin:Celestine1$$%%^^@learning-collective-db.postgres.database.azure.com:5432/postgres?sslmode=require
-            NODE_ENV=production
-  
+          resourceGroup: cloud-hub-rg
+          containerAppName: cloud-hub-app
+          imageToDeploy: ${{ secrets.ACR_LOGIN_SERVER }}/microservices-hub:${{ github.sha }}
+          targetPort: 80 # Use 3000 if using your default Dockerfile with dev server
+          ingress: external    
+
+      # =========================================================================
+      # METHOD B (ALTERNATIVE & RECOMMENDED): AZURE PUBLISH PROFILE
+      # If you get "No credentials found" or OIDC permission/role assignment issues,
+      # use a Publish Profile. It's much simpler, more secure, and extremely reliable.
+      #
+      # To use Method B instead:
+      # 1. Comment out/remove the "Azure Login" and "Deploy" steps above (Method A).
+      # 2. Go to your Azure Web App -> Overview -> Click "Get publish profile" -> Copy XML content.
+      # 3. Add a GitHub secret called AZURE_WEBAPP_PUBLISH_PROFILE with the XML content.
+      # 4. Uncomment the step below:
+      # =========================================================================
+      # - name: Deploy to Azure Web App (Publish Profile)
+      #   uses: azure/webapps-deploy@v3
+      #   with:
+      #     app-name: 'learningcollective-app'
+      #     publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+      #     images: 'ghcr.io/${{ github.repository }}:latest'
